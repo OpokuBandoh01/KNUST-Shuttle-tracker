@@ -26,8 +26,6 @@ interface GuestAccessModalProps {
 export default function GuestAccessModal({ isOpen, onClose, feature }: GuestAccessModalProps) {
   const router = useRouter()
 
-  if (!isOpen) return null
-
   const handleCreateAccount = () => {
     onClose()
     router.push("/register")
@@ -79,6 +77,8 @@ export default function GuestAccessModal({ isOpen, onClose, feature }: GuestAcce
   }
 
   const featureInfo = getFeatureInfo()
+
+  if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
