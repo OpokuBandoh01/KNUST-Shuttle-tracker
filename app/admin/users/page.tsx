@@ -79,8 +79,6 @@ export default function AdminUsersPage() {
       setUserForm(prev => ({ ...prev, role: "student" }))
     } else if (activeTab === "drivers") {
       setUserForm(prev => ({ ...prev, role: "driver" }))
-    } else if (activeTab === "admins") {
-      setUserForm(prev => ({ ...prev, role: "admin" }))
     }
   }, [activeTab])
 
@@ -425,7 +423,6 @@ export default function AdminUsersPage() {
             <TabsList>
               <TabsTrigger value="students">Students</TabsTrigger>
               <TabsTrigger value="drivers">Drivers</TabsTrigger>
-              <TabsTrigger value="admins">Administrators</TabsTrigger>
             </TabsList>
 
             <TabsContent value="students" className="space-y-4">
@@ -666,93 +663,7 @@ export default function AdminUsersPage() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="admins" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Administrator Accounts</CardTitle>
-                  <CardDescription>Manage system administrators and their permissions</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {isLoading ? (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                      <p className="mt-2 text-muted-foreground">Loading administrators...</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {getUsersByRole('admin').length === 0 ? (
-                        <div className="text-center py-8">
-                          <p className="text-muted-foreground">No administrators found</p>
-                        </div>
-                      ) : (
-                        getUsersByRole('admin').map((admin) => (
-                          <div key={admin.id} className="border rounded-lg p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-4">
-                                <Avatar>
-                                  <AvatarImage src={`/placeholder.svg?height=40&width=40`} />
-                                  <AvatarFallback>
-                                    {admin.name
-                                      .split(" ")
-                                      .map((n) => n[0])
-                                      .join("")}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <div className="flex items-center space-x-2">
-                                    <h4 className="font-medium">{admin.name}</h4>
-                                    <Badge variant="destructive">
-                                      <Shield className="h-3 w-3 mr-1" />
-                                      Administrator
-                                    </Badge>
-                                  </div>
-                                  <p className="text-sm text-muted-foreground">{admin.email}</p>
-                                  <div className="flex items-center space-x-4 text-xs text-muted-foreground mt-1">
-                                    {admin.department && <span>{admin.department}</span>}
-                                    <span>Joined: {formatDate(admin.createdAt)}</span>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <div className="text-sm">
-                                  <p className="text-xs text-muted-foreground">Last Updated</p>
-                                  <p className="font-medium">{formatDate(admin.updatedAt)}</p>
-                                </div>
-                                <div className="flex space-x-2 mt-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => setShowUserDetails(admin.id)}
-                                  >
-                                    <Eye className="h-3 w-3 mr-1" />
-                                    View
-                                  </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => handleEditUser(admin)}
-                                  >
-                                    <Edit className="h-3 w-3 mr-1" />
-                                    Edit
-                                  </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => handleDeleteUser(admin.id)}
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
+
           </Tabs>
         </div>
       </main>
@@ -764,13 +675,11 @@ export default function AdminUsersPage() {
             <DialogTitle>
               {activeTab === "students" ? "Add New Student" : 
                activeTab === "drivers" ? "Add New Driver" : 
-               activeTab === "admins" ? "Add New Administrator" : 
                "Add New User"}
             </DialogTitle>
             <DialogDescription>
               {activeTab === "students" ? "Create a new student account with appropriate permissions" :
                activeTab === "drivers" ? "Create a new driver account with vehicle and route assignments" :
-               activeTab === "admins" ? "Create a new administrator account with system access" :
                "Create a new user account with appropriate role and permissions"}
             </DialogDescription>
           </DialogHeader>
@@ -988,85 +897,7 @@ export default function AdminUsersPage() {
             </form>
           )}
 
-          {activeTab === "admins" && (
-            <form onSubmit={handleAddUser} className="space-y-6">
-              {/* Required Fields Row */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="admin-name">Full Name *</Label>
-                  <Input
-                    id="admin-name"
-                    placeholder="John Doe"
-                    value={userForm.name}
-                    onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
-                    className={formErrors.name ? "border-red-500" : ""}
-                  />
-                  {formErrors.name && (
-                    <p className="text-xs text-red-500">{formErrors.name}</p>
-                  )}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="admin-email">Email Address *</Label>
-                  <Input
-                    id="admin-email"
-                    type="email"
-                    placeholder="admin@knust.edu.gh"
-                    value={userForm.email}
-                    onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
-                    className={formErrors.email ? "border-red-500" : ""}
-                  />
-                  {formErrors.email && (
-                    <p className="text-xs text-red-500">{formErrors.email}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground">Firebase authentication</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="admin-department">Department</Label>
-                  <Input
-                    id="admin-department"
-                    placeholder="Transport Services"
-                    value={userForm.department}
-                    onChange={(e) => setUserForm({ ...userForm, department: e.target.value })}
-                  />
-                </div>
-              </div>
 
-              {/* Optional Fields Row */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="admin-firstname">First Name</Label>
-                  <Input
-                    id="admin-firstname"
-                    placeholder="John"
-                    value={userForm.firstName}
-                    onChange={(e) => setUserForm({ ...userForm, firstName: e.target.value })}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="admin-lastname">Last Name</Label>
-                  <Input
-                    id="admin-lastname"
-                    placeholder="Doe"
-                    value={userForm.lastName}
-                    onChange={(e) => setUserForm({ ...userForm, lastName: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-2 justify-end">
-                <Button type="button" variant="outline" onClick={() => setShowAddUser(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? "Adding..." : "Add Administrator"}
-                </Button>
-              </div>
-            </form>
-          )}
         </DialogContent>
       </Dialog>
 
