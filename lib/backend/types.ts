@@ -167,10 +167,17 @@ export interface Schedule {
 }
 
 export interface SystemSettings {
+  // General Settings
+  systemName: string
+  adminEmail: string
+  supportPhone: string
+  timezone: string
   maintenanceMode: boolean
   realTimeTracking: boolean
   autoBackup: boolean
   locationUpdateInterval: number
+  
+  // Service Hours
   serviceHours: {
     weekdays: {
       start: string
@@ -185,16 +192,24 @@ export interface SystemSettings {
       enabled: boolean
     }
   }
+  
+  // Notifications
   notifications: {
     pushNotifications: boolean
     emailNotifications: boolean
     smsNotifications: boolean
+    smtpServer: string
+    smtpPort: string
+    senderEmail: string
+    dailyReports: boolean
     alertThresholds: {
       delay: number
       capacity: number
       systemLoad: number
     }
   }
+  
+  // Security
   security: {
     twoFactorAuth: boolean
     passwordComplexity: boolean
@@ -202,5 +217,50 @@ export interface SystemSettings {
     maxLoginAttempts: number
     apiRateLimiting: boolean
     rateLimit: string
+    apiKey: string
+    httpsOnly: boolean
+    dataRetention: string
+    backupRetention: string
+    anonymousAnalytics: boolean
+    dataEncryption: boolean
   }
+  
+  // Integrations
+  integrations: {
+    googleMapsApi: {
+      enabled: boolean
+      apiKey: string
+    }
+    firebaseCloudMessaging: {
+      enabled: boolean
+      serverKey: string
+    }
+    smsGateway: {
+      enabled: boolean
+      provider: string
+      apiKey: string
+    }
+  }
+  
+  // Database
+  database: {
+    host: string
+    name: string
+    autoBackup: boolean
+    backupTime: string
+  }
+  
+  // System Status
+  systemStatus: {
+    database: 'operational' | 'degraded' | 'down'
+    apiServer: 'operational' | 'degraded' | 'down'
+    realTimeService: 'operational' | 'degraded' | 'down'
+    pushNotifications: 'operational' | 'degraded' | 'down'
+    smsService: 'operational' | 'degraded' | 'down'
+    backupSystem: 'operational' | 'degraded' | 'down'
+  }
+  
+  // Metadata
+  createdAt: Date
+  updatedAt: Date
 }

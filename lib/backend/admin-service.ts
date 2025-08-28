@@ -23,7 +23,9 @@ import {
   Alert, 
   Analytics, 
   SystemSettings,
-  User
+  User,
+  Stop,
+  Schedule
 } from "./types"
 
 export class AdminService {
@@ -319,7 +321,7 @@ export class AdminService {
         driverId: doc.id,
         driverName: doc.data().name,
         tripsCompleted: Math.floor(Math.random() * 50) + 10, // Mock data
-        averageRating: (Math.random() * 2 + 3).toFixed(1), // 3.0 - 5.0
+        averageRating: parseFloat((Math.random() * 2 + 3).toFixed(1)), // 3.0 - 5.0
         onTimePercentage: Math.floor(Math.random() * 20) + 80 // 80% - 100%
       }))
       
@@ -341,38 +343,8 @@ export class AdminService {
         const data = settingsDoc.data()
         return {
           ...data,
-          serviceHours: {
-            weekdays: {
-              start: data.serviceHours?.weekdays?.start || "06:00",
-              end: data.serviceHours?.weekdays?.end || "22:00",
-              peakFrequency: data.serviceHours?.weekdays?.peakFrequency || "5 minutes",
-              offPeakFrequency: data.serviceHours?.weekdays?.offPeakFrequency || "10 minutes"
-            },
-            weekends: {
-              start: data.serviceHours?.weekends?.start || "08:00",
-              end: data.serviceHours?.weekends?.end || "20:00",
-              frequency: data.serviceHours?.weekends?.frequency || "15 minutes",
-              enabled: data.serviceHours?.weekends?.enabled !== false
-            }
-          },
-          notifications: {
-            pushNotifications: data.notifications?.pushNotifications !== false,
-            emailNotifications: data.notifications?.emailNotifications !== false,
-            smsNotifications: data.notifications?.smsNotifications !== false,
-            alertThresholds: {
-              delay: data.notifications?.alertThresholds?.delay || 10,
-              capacity: data.notifications?.alertThresholds?.capacity || 90,
-              systemLoad: data.notifications?.alertThresholds?.systemLoad || 85
-            }
-          },
-          security: {
-            twoFactorAuth: data.security?.twoFactorAuth !== false,
-            passwordComplexity: data.security?.passwordComplexity !== false,
-            sessionTimeout: data.security?.sessionTimeout || 30,
-            maxLoginAttempts: data.security?.maxLoginAttempts || 5,
-            apiRateLimiting: data.security?.apiRateLimiting !== false,
-            rateLimit: data.security?.rateLimit || "1000 requests/hour"
-          }
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date()
         } as SystemSettings
       }
       
@@ -396,12 +368,61 @@ export class AdminService {
     }
   }
 
+  async resetSystemSettings(): Promise<void> {
+    try {
+      const defaultSettings = this.getDefaultSystemSettings()
+      await setDoc(doc(db, "system", "settings"), {
+        ...defaultSettings,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      })
+    } catch (error) {
+      console.error("Error resetting system settings:", error)
+      throw new Error("Failed to reset system settings")
+    }
+  }
+
+  async generateApiKey(): Promise<string> {
+    try {
+      const apiKey = `sk-${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`
+      await this.updateSystemSettings({
+        security: {
+          ...(await this.getSystemSettings()).security,
+          apiKey
+        }
+      })
+      return apiKey
+    } catch (error) {
+      console.error("Error generating API key:", error)
+      throw new Error("Failed to generate API key")
+    }
+  }
+
+  async checkSystemStatus(): Promise<SystemSettings['systemStatus']> {
+    try {
+      // This would typically check actual system health
+      // For now, return the stored status
+      const settings = await this.getSystemSettings()
+      return settings.systemStatus
+    } catch (error) {
+      console.error("Error checking system status:", error)
+      throw new Error("Failed to check system status")
+    }
+  }
+
   private getDefaultSystemSettings(): SystemSettings {
     return {
+      // General Settings
+      systemName: "KNUST Shuttle Tracker",
+      adminEmail: "admin@knust.edu.gh",
+      supportPhone: "+233 XX XXX XXXX",
+      timezone: "GMT (UTC+0)",
       maintenanceMode: false,
       realTimeTracking: true,
       autoBackup: true,
       locationUpdateInterval: 30,
+      
+      // Service Hours
       serviceHours: {
         weekdays: {
           start: "06:00",
@@ -416,24 +437,77 @@ export class AdminService {
           enabled: true
         }
       },
+      
+      // Notifications
       notifications: {
         pushNotifications: true,
         emailNotifications: true,
         smsNotifications: false,
+        smtpServer: "smtp.knust.edu.gh",
+        smtpPort: "587",
+        senderEmail: "noreply@knust.edu.gh",
+        dailyReports: true,
         alertThresholds: {
           delay: 10,
           capacity: 90,
           systemLoad: 85
         }
       },
+      
+      // Security
       security: {
         twoFactorAuth: true,
         passwordComplexity: true,
         sessionTimeout: 30,
         maxLoginAttempts: 5,
         apiRateLimiting: true,
-        rateLimit: "1000 requests/hour"
-      }
+        rateLimit: "1000 requests/hour",
+        apiKey: "sk-xxxxxxxxxxxxxxxxxxxxxxxx",
+        httpsOnly: true,
+        dataRetention: "2 years",
+        backupRetention: "6 months",
+        anonymousAnalytics: true,
+        dataEncryption: true
+      },
+      
+      // Integrations
+      integrations: {
+        googleMapsApi: {
+          enabled: true,
+          apiKey: ""
+        },
+        firebaseCloudMessaging: {
+          enabled: true,
+          serverKey: ""
+        },
+        smsGateway: {
+          enabled: false,
+          provider: "",
+          apiKey: ""
+        }
+      },
+      
+      // Database
+      database: {
+        host: "localhost:5432",
+        name: "knust_shuttle_db",
+        autoBackup: true,
+        backupTime: "02:00"
+      },
+      
+      // System Status
+      systemStatus: {
+        database: 'operational',
+        apiServer: 'operational',
+        realTimeService: 'operational',
+        pushNotifications: 'operational',
+        smsService: 'degraded',
+        backupSystem: 'operational'
+      },
+      
+      // Metadata
+      createdAt: new Date(),
+      updatedAt: new Date()
     }
   }
 
